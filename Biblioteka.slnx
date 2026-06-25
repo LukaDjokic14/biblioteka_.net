@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Biblioteka.API/Biblioteka.API.csproj" />
+  <Project Path="Biblioteka.Domain/Biblioteka.Domain.csproj" />
+  <Project Path="Biblioteka.Infrastructure/Biblioteka.Infrastructure.csproj" />
+  <Project Path="Biblioteka.Tests/Biblioteka.Tests.csproj" />
+</Solution>
