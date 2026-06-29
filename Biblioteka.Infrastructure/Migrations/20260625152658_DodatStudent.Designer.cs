@@ -3,6 +3,7 @@ using System;
 using Biblioteka.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biblioteka.Infrastructure.Migrations
 {
     [DbContext(typeof(BibliotekaContext))]
-    partial class BibliotekaContextModelSnapshot : ModelSnapshot
+    [Migration("20260625152658_DodatStudent")]
+    partial class DodatStudent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -216,25 +219,6 @@ namespace Biblioteka.Infrastructure.Migrations
                     b.HasIndex("KnjigaId");
 
                     b.ToTable("StavkaIzdavanja");
-                });
-
-            modelBuilder.Entity("Biblioteka.Domain.Student", b =>
-                {
-                    b.Property<int>("StudentID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Ime")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Prezime")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("StudentID");
-
-                    b.ToTable("Studenti");
                 });
 
             modelBuilder.Entity("Biblioteka.Domain.Clan", b =>

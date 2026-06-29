@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using Biblioteka.API.DTOs.Autori;
+using Biblioteka.API.Features.Autori;
 using FluentValidation;
-using Biblioteka.API.DTOs.Autori;
-using Biblioteka.Domain;
-using Biblioteka.Domain.Repozitorijumi;
-using System.Linq;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
 
 namespace Biblioteka.API.Controllers
 {
@@ -13,144 +13,74 @@ namespace Biblioteka.API.Controllers
     [Authorize(Roles = "Bibliotekar")]
     public class AutoriController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMediator _mediator;
         private readonly IValidator<CreateAutorRequest> _createValidator;
         private readonly IValidator<UpdateAutorRequest> _updateValidator;
 
         public AutoriController(
-            IUnitOfWork unitOfWork,
+            IMediator mediator,
             IValidator<CreateAutorRequest> createValidator,
             IValidator<UpdateAutorRequest> updateValidator)
         {
-            _unitOfWork = unitOfWork;
+            _mediator = mediator;
             _createValidator = createValidator;
             _updateValidator = updateValidator;
         }
 
         // 1. CREATE
         [HttpPost]
-        public ActionResult<AutorDto> Create([FromBody] CreateAutorRequest request)
+        public async Task<ActionResult<AutorDto>> Create([FromBody] CreateAutorRequest request)
         {
-            // Fluent Validacija
             var validationResult = _createValidator.Validate(request);
             if (!validationResult.IsValid)
-            {
                 return BadRequest(validationResult.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
-            }
 
-            var autor = new Autor
-            {
-                Ime = request.Ime,
-                Prezime = request.Prezime,
-                Biografija = request.Biografija
-            };
-
-            _unitOfWork.Autori.Add(autor);
-            _unitOfWork.SaveChanges();
-
-            var dto = new AutorDto
-            {
-                AutorId = autor.AutorId,
-                Ime = autor.Ime,
-                Prezime = autor.Prezime,
-                Biografija = autor.Biografija
-            };
-
-            return CreatedAtAction(nameof(GetById), new { id = dto.AutorId }, dto);
+            var command = new CreateAutorCommand(request.Ime, request.Prezime, request.Biografija);
+            var result = await _mediator.Send(command);
+            return CreatedAtAction(nameof(GetById), new { id = result.AutorId }, result);
         }
 
         // 2. READ ALL
         [HttpGet]
         [AllowAnonymous]
-        public ActionResult<IEnumerable<AutorDto>> GetAll()
+        public async Task<ActionResult<IEnumerable<AutorDto>>> GetAll()
         {
-            var autori = _unitOfWork.Autori.GetAll();
-            var results = autori.Select(a => new AutorDto
-            {
-                AutorId = a.AutorId,
-                Ime = a.Ime,
-                Prezime = a.Prezime,
-                Biografija = a.Biografija
-            }).ToList();
-
-            return Ok(results);
+            var result = await _mediator.Send(new GetAllAutoriQuery());
+            return Ok(result);
         }
 
-        // 3. READ BY ID 
+        // 3. READ BY ID
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public ActionResult<AutorDto> GetById(int id)
+        public async Task<ActionResult<AutorDto>> GetById(int id)
         {
-            var autor = _unitOfWork.Autori.GetById(id);
-            if (autor == null) return NotFound();
-
-            var dto = new AutorDto
-            {
-                AutorId = autor.AutorId,
-                Ime = autor.Ime,
-                Prezime = autor.Prezime,
-                Biografija = autor.Biografija
-            };
-
-            return Ok(dto);
+            var result = await _mediator.Send(new GetAutorByIdQuery(id));
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
         // 4. UPDATE
         [HttpPut("{id}")]
-        public ActionResult<AutorDto> Update(int id, [FromBody] UpdateAutorRequest request)
+        public async Task<ActionResult<AutorDto>> Update(int id, [FromBody] UpdateAutorRequest request)
         {
-            // Fluent Validacija
             var validationResult = _updateValidator.Validate(request);
             if (!validationResult.IsValid)
-            {
                 return BadRequest(validationResult.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
-            }
 
-            var autor = _unitOfWork.Autori.GetById(id);
-            if (autor == null) return NotFound();
-
-            if (!string.IsNullOrWhiteSpace(request.Ime))
-                autor.Ime = request.Ime;
-
-            if (!string.IsNullOrWhiteSpace(request.Prezime))
-                autor.Prezime = request.Prezime;
-
-            if (!string.IsNullOrWhiteSpace(request.Biografija))
-                autor.Biografija = request.Biografija;
-
-            _unitOfWork.SaveChanges();
-
-            var izmenjeniDto = new AutorDto
-            {
-                AutorId = autor.AutorId,
-                Ime = autor.Ime,
-                Prezime = autor.Prezime,
-                Biografija = autor.Biografija
-            };
-
-            return Ok(izmenjeniDto);
+            var command = new UpdateAutorCommand(id, request.Ime, request.Prezime, request.Biografija);
+            var result = await _mediator.Send(command);
+            if (result == null) return NotFound();
+            return Ok(result);
         }
 
-        // 5. DELETE 
+        // 5. DELETE
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var autor = _unitOfWork.Autori.GetById(id);
-            if (autor == null) return NotFound();
-
-            // Biznis logika ostaje netaknuta
-            var imaKnjige = _unitOfWork.Pisanja.Find(p => p.Autor.AutorId == id).Any();
-
-            if (imaKnjige)
-            {
+            var uspjeh = await _mediator.Send(new DeleteAutorCommand(id));
+            if (!uspjeh)
                 return BadRequest("Nije moguće obrisati autora jer već ima povezane knjige u bazi. Prvo morate obrisati njegove knjige.");
-            }
-
-            _unitOfWork.Autori.Remove(autor);
-            _unitOfWork.SaveChanges();
-
             return NoContent();
         }
     }
 }
-

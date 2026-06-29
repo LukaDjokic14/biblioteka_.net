@@ -1,9 +1,7 @@
 ﻿using Biblioteka.Domain;
 using Biblioteka.Domain.Repozitorijumi;
 using Biblioteka.Infrastructure.Repozitorijumi;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace Biblioteka.Infrastructure
 {
@@ -19,6 +17,7 @@ namespace Biblioteka.Infrastructure
         private IRepository<Bibliotekar>? _bibliotekari;
         private IRepository<Pisanje>? _pisanja;
         private IRepository<StavkaIzdavanja> _stavkeIzdavanja;
+        private IRepository<Student> _studenti;
 
         public UnitOfWork(BibliotekaContext context)
         {
@@ -48,6 +47,8 @@ namespace Biblioteka.Infrastructure
 
         public IRepository<StavkaIzdavanja> StavkeIzdavanja =>
             _stavkeIzdavanja = new Repository<StavkaIzdavanja>(_context);
+
+        public IRepository<Student> Studenti => _studenti ??= new Repository<Student>(_context);
 
         public int SaveChanges() => _context.SaveChanges();
 

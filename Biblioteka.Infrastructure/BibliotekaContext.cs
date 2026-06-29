@@ -1,8 +1,6 @@
 ﻿using Biblioteka.Domain;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 
 namespace Biblioteka.Infrastructure
 {
@@ -20,6 +18,8 @@ namespace Biblioteka.Infrastructure
         public DbSet<Izdavanje> Izdavanja { get; set; }
         public DbSet<Grad> Gradovi { get; set; }
 
+        public DbSet<Student> Studenti { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -28,13 +28,13 @@ namespace Biblioteka.Infrastructure
             modelBuilder.Entity<Clan>().HasKey(c => c.Jmbg);
             modelBuilder.Entity<Bibliotekar>().HasKey(b => b.Jmbg);
 
-            // --- Mnogi-na-mnogi: Knjiga i Autor (preko tabele Pisanje) ---
+            //Knjiga i Autor (preko tabele Pisanje)
 
             // 1. Definisanje kompozitnog primarnog ključa
             modelBuilder.Entity<Pisanje>()
                 .HasKey(p => new { p.KnjigaId, p.AutorId });
 
-            // 2. Relacija Knjiga -> Pisanje
+            // 2. Knjiga -> Pisanje
             modelBuilder.Entity<Pisanje>()
                 .HasOne(p => p.Knjiga)
                 .WithMany(k => k.Pisanja) // Povezujemo se na listu Pisanja u klasi Knjiga
@@ -43,22 +43,22 @@ namespace Biblioteka.Infrastructure
             // 3. Relacija Autor -> Pisanje 
             modelBuilder.Entity<Pisanje>()
                 .HasOne(p => p.Autor)
-                .WithMany(a => a.Pisanja) // OVDE JE BILA KVAKA: Mora da stoji (a => a.Pisanja)
+                .WithMany(a => a.Pisanja) 
                 .HasForeignKey(p => p.AutorId);
 
 
-            // --- Mnogi-na-mnogi: Knjiga i Izdavanje (preko tabele StavkaIzdavanja) ---
+            // Knjiga i Izdavanje (preko tabele StavkaIzdavanja)
 
-            // 1. Definisanje kompozitnog primarnog ključa
+            //Definisanje kompozitnog primarnog ključa
             modelBuilder.Entity<StavkaIzdavanja>().HasKey(si => new { si.IzdavanjeId, si.KnjigaId });
 
-            // 2. Relacija Izdavanje -> StavkaIzdavanja
+            //Relacija Izdavanje -> StavkaIzdavanja
             modelBuilder.Entity<StavkaIzdavanja>()
                 .HasOne(si => si.Izdavanje)
                 .WithMany(i => i.StavkeIzdavanja)
                 .HasForeignKey(si => si.IzdavanjeId);
 
-            // 3. Relacija Knjiga -> StavkaIzdavanja
+            // Relacija Knjiga -> StavkaIzdavanja
             modelBuilder.Entity<StavkaIzdavanja>()
                 .HasOne(si => si.Knjiga)
                 .WithMany(k => k.StavkeIzdavanja)

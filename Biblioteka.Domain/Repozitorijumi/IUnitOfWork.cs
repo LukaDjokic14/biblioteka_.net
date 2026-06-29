@@ -17,6 +17,8 @@ namespace Biblioteka.Domain.Repozitorijumi
 
         IRepository<StavkaIzdavanja> StavkeIzdavanja { get; }
 
+        IRepository<Student> Studenti { get; }
+
         int SaveChanges();
     }
 }

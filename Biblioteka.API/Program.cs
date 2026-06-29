@@ -7,12 +7,13 @@ using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. SVE builder.Services IDE OVDE ---
+//1. SVE builder.Services IDE OVDE
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddControllers()
     .AddJsonOptions(options => {
@@ -43,6 +44,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 builder.Services.AddScoped<IzdavanjeBackgroundService>();
 builder.Services.AddHangfire(config => config.UseInMemoryStorage());
 builder.Services.AddHangfireServer();
@@ -62,7 +65,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-
+//middleware pipeline
 app.UseCors("AllowFrontend"); 
 app.UseHttpsRedirection();
 app.UseAuthentication();
