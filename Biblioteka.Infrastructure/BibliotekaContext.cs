@@ -18,7 +18,7 @@ namespace Biblioteka.Infrastructure
         public DbSet<Izdavanje> Izdavanja { get; set; }
         public DbSet<Grad> Gradovi { get; set; }
 
-        public DbSet<Student> Studenti { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
